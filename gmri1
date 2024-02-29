@@ -1,0 +1,66 @@
+local S4 = require("S4")
+S = S4.NewSimulation()
+
+period = 555
+gratingthickness = 150
+dutycycle = 0.8
+ridgewidth = period*dutycycle
+
+gratingindex = 2.02
+liquidindex = 1.333
+glassindex = 1.45
+
+nharm = 21
+lambdain = 500
+lambdafin = 950
+npoints = 3500;
+
+freqin = 1/lambdafin 
+freqfin = 1/lambdain
+deltaf = (freqfin - freqin)/npoints
+
+S:SetLattice(period)
+
+S:SetNumG(nharm)
+S:UsePolarizationDecomposition()
+
+S:AddMaterial("GratingMaterial", {gratingindex^2,0})
+S:AddMaterial("Air", {1,0})
+S:AddMaterial("Glass", {glassindex^2,0})
+S:AddMaterial("Liquid", {liquidindex^2,0})
+
+S:AddLayer('GlassSubstrate', 0, 'Glass')
+S:AddLayer('Grating', gratingthickness, 'Liquid')
+S:SetLayerPatternRectangle('Grating', 'GratingMaterial', {0,0}, 0, {ridgewidth*0.5,0})
+S:AddLayer('LiquidAbove', 0, 'Liquid')
+
+
+
+
+S:SetExcitationPlanewave({0,0},{1,0},{0,0})
+
+
+local filespectrum1 = io.open("back_r_TE_nharm21_500_950_npoints3500_t150_dc0_8_a555_n2_02_test.txt","w")
+local filespectrum2 = io.open("forw_r_TE_nharm21_500_950_npoints3500_t150_dc0_8_a555_n2_02_test.txt","w")
+
+local filefreq = io.open("freq_500_950_npoints3500.txt","w")
+
+
+for freq = freqin, freqfin, deltaf 
+do
+ S:SetFrequency(freq)
+ 
+
+forw_r, back_r, forw_i, back_i = S:GetPowerFlux('GlassSubstrate')
+ 
+filespectrum1:write("\n", back_r)
+filespectrum2:write("\n", forw_r)
+
+filefreq:write("\n", freq) 
+  end
+
+ 
+
+
+
+
